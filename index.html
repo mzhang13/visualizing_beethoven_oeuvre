@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <style type="text/css">
+            body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0;}
+            svg {
+            width: 100%;
+            height: 100%;
+            }
+
+            .graphText {
+                font-family: "Baskerville"
+            }
+        </style>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.core.min.js"></script>
+    </head>
+    <body>
+        <svg></svg>
+        <script type="text/javascript">
+            var margin = {top: 50, bottom: 50, left: 50, right: 50}
+            
+            d3.csv("cleaned_imslp.csv").then(data => {
+                // data.forEach(d => {
+                // })
+                
+                var periods = d3.map(data, d => {
+                    return d["period"];
+                });
+
+                // List of counts per period
+                counts = [];
+                periods.keys().forEach(period => {
+                    counter = 0;
+                    data.forEach(row => {
+                        if (row["period"] === period) {counter += 1;}
+                    });
+                    counts.push(counter);
+                });
+                
+                console.log(periods.keys());
+                console.log(counts);
+                console.log(_.max(counts))
+
+                var height = 300;
+                var width = 500;
+                var rectWidth = (width - margin.left - margin.bottom) / counts.length
+
+                var xScale = d3.scaleBand()
+                    .domain(periods.keys())
+                    .range([margin.left, margin.left + counts.length * rectWidth]);
+
+                var xAxis = d3.axisBottom()
+                    .scale(xScale);
+
+                // Since I know it goes by 20, for now...
+                var yMax = _.max(counts);
+                if (yMax % 20 === 0) {return;}
+                else {yMax = (Math.floor(_.max(counts) / 20) + 1) * 20;}
+
+                var yScale = d3.scaleLinear()
+                    .domain([0, yMax])
+                    .range([height - margin.bottom, margin.top]);
+                var heightScale = d3.scaleLinear()
+                    .domain([0, yMax])
+                    .range([0, height - margin.top - margin.bottom]);
+
+                var yAxis = d3.axisLeft()
+                    .scale(yScale);
+
+                var svg = d3.select("svg");
+                svg.selectAll("rect")
+                	.data(counts)
+                	.enter().append("rect")
+                	.attr("x", (d, i) => margin.left + i * rectWidth)
+                	.attr("y", d => yScale(d))
+                	.attr("width", rectWidth)
+                	.attr("height", d => heightScale(d))
+                	.attr("fill", "aqua")
+                    .attr("stroke", "black");
+
+                svg.append("g")
+                    .attr("class", "graphText")
+                    .attr("transform", "translate(" + [0, height - margin.bottom] + ")")
+                    .call(xAxis);
+
+                svg.append("g")
+                    .attr("class", "graphText")
+                    .attr("transform", "translate(" + [margin.left, 0] + ")")
+                    .call(yAxis);
+
+                svg.append("text")
+                    .attr("class", "graphText")
+                    .attr("x", width / 2)
+                    .attr("y", 0 + margin.top * .8)
+                    .style("text-anchor", "middle")
+                    .text("Number of Beethoven Works by Period");
+                });
+        </script>
+    </body>
+</html>
+
+
+ <!-- <!DOCTYPE html>
+ <head>
+   <meta charset="utf-8">
+   <script src="https://d3js.org/d3.v4.min.js"></script>
+   <style>
+     body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+     svg {
+       width: 100%;
+       height: 100%;
+     }
+   </style>
+ </head>
+ 
+ <body>
+   <svg></svg>
+   <script>
+         var rectWidth = 100;
+     var height = 300;
+     var data = [53, 144, 79, 114];
+     
+     var svg = d3.select("svg");
+     svg.selectAll("rect")
+         .data(data)
+         .enter().append("rect")
+         .attr("x", (d, i) => i * rectWidth)
+         .attr("y", d => height - d)
+         .attr("width", rectWidth)
+         .attr("height", d => d)
+         .attr("fill", "blue")
+         .attr("stroke", "#fff");
+ 
+   </script>
+ </body>
+  -->
