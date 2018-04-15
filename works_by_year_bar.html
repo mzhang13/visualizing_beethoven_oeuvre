@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+    <head>
+        <style type="text/css">
+            body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0;}
+            svg {
+            width: 100%;
+            height: 100%;
+            }
+
+            .graphText {
+                font-family: "Baskerville"
+            }
+        </style>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.min.js"></script>
+    </head>
+    <body>
+        <svg></svg>
+        <script type="text/javascript">
+            var margin = {top: 50, bottom: 50, left: 50, right: 50}
+            var height = 600;
+            var width = 1600;
+            
+            d3.csv("cleaned_imslp.csv").then(data => {
+                data.forEach(d => {
+                    d["max_date"] = +d["max_date"]
+                })
+
+                var years = _.range(1770, 1826+1) // His lifetime
+
+                // List of counts per year
+                counts = [];
+                years.forEach(year => {
+                    counter = 0;
+                    data.forEach(row => {
+                        if (row["max_date"] === year) {counter += 1;}
+                    });
+                    counts.push(counter);
+                });
+
+                freq_table = []
+
+                for (let i = 0; i < counts.length; i++) {
+                    freq_row = {}
+                    freq_row["year"] = years[i]
+                    freq_row["count"] = counts[i]
+                    freq_table.push(freq_row)
+                }
+
+                console.log(freq_table)
+
+                var rectWidth = (width - margin.left - margin.bottom) / counts.length
+
+                var xScale = d3.scaleBand()
+                    .domain(years)
+                    .range([margin.left, margin.left + counts.length * rectWidth]);
+
+                var xAxis = d3.axisBottom()
+                    .tickFormat(d3.format("d"))
+                    .scale(xScale); 
+
+                var yMax = _.max(counts);
+                // Get scale to reach next "10"
+                if (yMax % 10 === 0) {return;}
+                else {yMax = (Math.floor(_.max(counts) / 10) + 1) * 10;}
+
+                var yScale = d3.scaleLinear()
+                    .domain([0, yMax])
+                    .range([height - margin.bottom, margin.top]);
+                var heightScale = d3.scaleLinear()
+                    .domain([0, yMax])
+                    .range([0, height - margin.top - margin.bottom]);
+
+                var yAxis = d3.axisLeft()
+                    .scale(yScale);
+
+                var svg = d3.select("svg");
+                svg.selectAll("rect")
+                	.data(freq_table)
+                	.enter().append("rect")
+                	.attr("x", d => xScale(d["year"]))
+                	.attr("y", d => yScale(d["count"]))
+                	.attr("width", rectWidth)
+                	.attr("height", d => heightScale(d["count"]))
+                	.attr("fill", "red")
+                    .attr("stroke", "black");
+
+                svg.append("g")
+                    .attr("class", "graphText")
+                    .attr("transform", "translate(" + [0, height - margin.bottom] + ")")
+                    .call(xAxis);
+
+                svg.append("g")
+                    .attr("class", "graphText")
+                    .attr("transform", "translate(" + [margin.left, 0] + ")")
+                    .call(yAxis);
+
+                svg.append("line")
+                    .attr("x1", xScale(1794))
+                    .attr("y1", margin.top)
+                    .attr("x2", xScale(1794))
+                    .attr("y2", height - margin.top - margin.bottom)
+                    .style("stroke", "blue")
+
+                svg.append("line")
+                    .attr("x1", xScale(1802))
+                    .attr("y1", margin.top)
+                    .attr("x2", xScale(1802))
+                    .attr("y2", height - margin.top - margin.bottom)
+                    .style("stroke", "blue")
+
+                svg.append("line")
+                    .attr("x1", xScale(1814))
+                    .attr("y1", margin.top)
+                    .attr("x2", xScale(1814))
+                    .attr("y2", height - margin.top - margin.bottom)
+                    .style("stroke", "blue")
+
+                svg.append("text")
+                    .attr("class", "graphText")
+                    .attr("x", width / 2)
+                    .attr("y", 0 + margin.top * .8)
+                    .style("text-anchor", "middle")
+                    .text("Number of Beethoven Works by Year");
+                });
+        </script>
+    </body>
+</html>
+
+
+ <!-- <!DOCTYPE html>
+ <head>
+   <meta charset="utf-8">
+   <script src="https://d3js.org/d3.v4.min.js"></script>
+   <style>
+     body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+     svg {
+       width: 100%;
+       height: 100%;
+     }
+   </style>
+ </head>
+ 
+ <body>
+   <svg></svg>
+   <script>
+         var rectWidth = 100;
+     var height = 300;
+     var data = [53, 144, 79, 114];
+     
+     var svg = d3.select("svg");
+     svg.selectAll("rect")
+         .data(data)
+         .enter().append("rect")
+         .attr("x", (d, i) => i * rectWidth)
+         .attr("y", d => height - d)
+         .attr("width", rectWidth)
+         .attr("height", d => d)
+         .attr("fill", "blue")
+         .attr("stroke", "#fff");
+ 
+   </script>
+ </body>
+  -->
